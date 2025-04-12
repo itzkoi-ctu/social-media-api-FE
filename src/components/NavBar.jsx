@@ -1,20 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Navbar, Container, Nav, Button } from 'react-bootstrap';
+import { useAuth } from "../page/AuthContext";
+import { Button, Container, Nav, Navbar } from "react-bootstrap";
 
 export default function AppNavbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, logout, userId } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    navigate("/");
+    logout();
+    navigate("/signin");
   };
 
   return (
@@ -27,13 +21,14 @@ export default function AppNavbar() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav>
-            {!isLoggedIn ? (
+            {!isAuthenticated ? (
               <>
                 <Nav.Link as={Link} to="/signin">Sign In</Nav.Link>
                 <Nav.Link as={Link} to="/signup">Sign Up</Nav.Link>
               </>
             ) : (
               <>
+                <Nav.Link as={Link} to={`/my-profile/${userId}/details`}>My Profile</Nav.Link>
                 <Nav.Link as={Link} to="/posts">All Posts</Nav.Link>
                 <Nav.Link as={Link} to="/create-post">Create Post</Nav.Link>
                 <Button 

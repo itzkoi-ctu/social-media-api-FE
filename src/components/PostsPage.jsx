@@ -2,12 +2,30 @@
 
 import { useEffect, useState } from "react"
 import axios from "axios"
-import { Container, Card, Button, Row, Col, Badge, Spinner, Alert } from "react-bootstrap"
+import {
+  Container,
+  Card,
+  Button,
+  Row,
+  Col,
+  Badge,
+  Spinner,
+  Alert,
+  Modal,
+  Form,
+} from "react-bootstrap"
 
 export default function PostsPage() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingPost, setEditingPost] = useState(null)
+  const [editTitle, setEditTitle] = useState("")
+  const [editText, setEditText] = useState("")
+  const [editTags, setEditTags] = useState([])
+  const [editFile, setEditFile] = useState(null)
 
   useEffect(() => {
     fetchPosts()
@@ -63,46 +81,42 @@ export default function PostsPage() {
     }
   }
 
-  const handleEdit = async (post) => {
-    const token = localStorage.getItem("token")
-    const newTitle = prompt("Cập nhật tiêu đề:", post.title)
-    const newText = prompt("Cập nhật nội dung:", post.text)
-  
-    if (!newTitle || !newText) return
-  
-    const formData = new FormData()
-    formData.append("title", newTitle)
-    formData.append("text", newText)
-    formData.append("tags", post.tags?.join(",") || "")
-  
-    // Thêm input để người dùng chọn media mới
-    const fileInput = document.createElement("input")
-    fileInput.type = "file"
-    fileInput.accept = "image/*,video/*"
-  
-    fileInput.onchange = async () => {
-      const file = fileInput.files[0]
-      if (file) {
-        formData.append("mediaFile", file)
-      }
-  
-      try {
-        await axios.put(`http://localhost:8080/posts/${post.id}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        fetchPosts()
-      } catch (err) {
-        console.error("Error updating post:", err)
-        alert("Cập nhật bài viết thất bại.")
-      }
-    }
-  
-    fileInput.click()
+  const handleEdit = (post) => {
+    setEditingPost(post)
+    setEditTitle(post.title)
+    setEditText(post.text)
+    setEditTags(post.tags?.join(", ") || "") // Thêm dòng này
+    setEditFile(null)
+    setShowEditModal(true)
   }
-  
+
+  const submitEditForm = async () => {
+    if (!editingPost) return
+    const token = localStorage.getItem("token")
+    const formData = new FormData()
+    formData.append("title", editTitle)
+    formData.append("text", editText)
+    formData.append("tags", editTags);
+        if (editFile) {
+          formData.append("mediaFile", editFile || "");
+        }
+
+    try {
+      await axios.put(`http://localhost:8080/posts/${editingPost.id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      setShowEditModal(false)
+      setEditingPost(null)
+      setEditFile(null)
+      fetchPosts()
+    } catch (err) {
+      console.error("Error updating post:", err)
+      alert("Cập nhật bài viết thất bại.")
+    }
+  }
 
   if (loading) {
     return (
@@ -151,7 +165,8 @@ export default function PostsPage() {
                 <Card.Body>
                   <Card.Title>{post.title}</Card.Title>
                   <Card.Text className="text-truncate">{post.text}</Card.Text>
-
+                  <h6>Tags:</h6>
+                  <Card.Text className="text-muted small">{post.tags?.join(", ")}</Card.Text>
                   <div className="d-flex align-items-center mt-3">
                     <img
                       src={post.creator.profilePhoto || "/placeholder.svg"}
@@ -207,6 +222,59 @@ export default function PostsPage() {
           ))}
         </Row>
       )}
+
+      {/* Modal chỉnh sửa */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Chỉnh sửa bài viết</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Tiêu đề</Form.Label>
+              <Form.Control
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Nội dung</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+              />
+            </Form.Group>
+
+            <Form.Label>Tags</Form.Label>
+              <Form.Control 
+                type="text" 
+                placeholder="Separate tags with commas (e.g., news,tech,social)" 
+                value={editTags} 
+                onChange={(e) => setEditTags(e.target.value)}
+              />
+            <Form.Group className="mb-3">
+              <Form.Label>Ảnh / Video (nếu muốn thay đổi)</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*,video/*"
+                onChange={(e) => setEditFile(e.target.files[0])}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            Hủy
+          </Button>
+          <Button variant="primary" onClick={submitEditForm}>
+            Lưu thay đổi
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   )
 }

@@ -4,36 +4,38 @@ import { useState } from "react"
 import axios from "axios"
 import { useNavigate, Link } from "react-router-dom"
 import { Form, Button, Container, Card, Alert, InputGroup, Row, Col, Spinner } from "react-bootstrap"
-
-export default function SigninForm() {
+import { useAuth } from "../page/AuthContext"
+export default function SigninForm({ setIsAuthenticated }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const { login } = useAuth();
 
   const navigate = useNavigate()
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const response = await axios.post("http://localhost:8080/user/signin", {
         email,
         password,
-      })
+      });
 
-      localStorage.setItem("token", response.data.token)
-      navigate("/posts")
+      // Use the context login method
+      login(response.data.token, response.data.userId);
+      navigate("/posts");
     } catch (error) {
-      console.error("Login failed:", error)
-      setError(error.response?.data?.message || "Login failed. Please check your credentials and try again.")
+      console.error("Login failed:", error);
+      setError(error.response?.data?.message || "Login failed. Please check your credentials and try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Container className="py-5">
@@ -83,7 +85,7 @@ export default function SigninForm() {
                       required
                     />
                     <Button variant="outline-secondary" onClick={() => setShowPassword(!showPassword)}>
-                      <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                      <i className={`bi ${showPassword ?  "bi-eye": "bi-eye-slash"}`}></i>
                     </Button>
                   </InputGroup>
                 </Form.Group>
