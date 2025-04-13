@@ -18,7 +18,12 @@ export default function AppNavbar() {
           <i className="bi bi-phone me-2"></i>
           SocialApp
         </Navbar.Brand>
+        <Nav>
+        <Nav.Link as={Link} to="/posts">All Posts</Nav.Link>
+
+        </Nav>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav>
             {!isAuthenticated ? (
@@ -29,7 +34,7 @@ export default function AppNavbar() {
             ) : (
               <>
                 <Nav.Link as={Link} to={`/my-profile/${userId}/details`}>My Profile</Nav.Link>
-                <Nav.Link as={Link} to="/posts">All Posts</Nav.Link>
+                <Nav.Link as={Link} to={`/posts/mypost/${userId}`}>My Posts</Nav.Link>
                 <Nav.Link as={Link} to="/create-post">Create Post</Nav.Link>
                 <Button 
                   variant="outline-light" 

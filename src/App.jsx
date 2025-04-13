@@ -12,6 +12,7 @@
  import { AuthProvider, useAuth } from "./page/AuthContext"
 
 import UserProfile from "./components/UserProfile"
+import MyPost from "./components/MyPost"
 
 function App() {
   const ProtectedRoute = ({ children }) => {
@@ -51,6 +52,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <UserProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/posts/mypost/:userId"
+                element={
+                  <ProtectedRoute>
+                    <MyPost />
                   </ProtectedRoute>
                 }
               />

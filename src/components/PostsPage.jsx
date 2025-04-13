@@ -11,8 +11,6 @@ import {
   Badge,
   Spinner,
   Alert,
-  Modal,
-  Form,
 } from "react-bootstrap"
 
 export default function PostsPage() {
@@ -20,26 +18,14 @@ export default function PostsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editingPost, setEditingPost] = useState(null)
-  const [editTitle, setEditTitle] = useState("")
-  const [editText, setEditText] = useState("")
-  const [editTags, setEditTags] = useState([])
-  const [editFile, setEditFile] = useState(null)
-
   useEffect(() => {
     fetchPosts()
   }, [])
 
   const fetchPosts = async () => {
     setLoading(true)
-    const token = localStorage.getItem("token")
     try {
-      const res = await axios.get("http://localhost:8080/posts", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const res = await axios.get("http://localhost:8080/posts")
       setPosts(res.data.content)
       setError(null)
     } catch (err) {
@@ -64,60 +50,6 @@ export default function PostsPage() {
     }
   }
 
-  const handleDelete = async (postId) => {
-    const token = localStorage.getItem("token")
-    if (!window.confirm("Bạn có chắc muốn xoá bài viết này?")) return
-
-    try {
-      await axios.delete(`http://localhost:8080/posts/${postId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      fetchPosts()
-    } catch (err) {
-      console.error("Error deleting post:", err)
-      alert("Xoá bài viết thất bại.")
-    }
-  }
-
-  const handleEdit = (post) => {
-    setEditingPost(post)
-    setEditTitle(post.title)
-    setEditText(post.text)
-    setEditTags(post.tags?.join(", ") || "") // Thêm dòng này
-    setEditFile(null)
-    setShowEditModal(true)
-  }
-
-  const submitEditForm = async () => {
-    if (!editingPost) return
-    const token = localStorage.getItem("token")
-    const formData = new FormData()
-    formData.append("title", editTitle)
-    formData.append("text", editText)
-    formData.append("tags", editTags);
-        if (editFile) {
-          formData.append("mediaFile", editFile || "");
-        }
-
-    try {
-      await axios.put(`http://localhost:8080/posts/${editingPost.id}`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      setShowEditModal(false)
-      setEditingPost(null)
-      setEditFile(null)
-      fetchPosts()
-    } catch (err) {
-      console.error("Error updating post:", err)
-      alert("Cập nhật bài viết thất bại.")
-    }
-  }
-
   if (loading) {
     return (
       <Container className="text-center py-5">
@@ -139,14 +71,13 @@ export default function PostsPage() {
     <Container className="py-4">
       <h2 className="mb-4">
         <i className="bi bi-clipboard-check me-2"></i>
-        Latest Posts
+        New feeds
       </h2>
 
       {posts.length === 0 ? (
         <Card className="text-center p-5 bg-light">
           <Card.Body>
-            <h4>No posts yet</h4>
-            <p className="text-muted">Be the first to create a post!</p>
+            <h4>Chưa có bài viết nào</h4>
           </Card.Body>
         </Card>
       ) : (
@@ -166,7 +97,9 @@ export default function PostsPage() {
                   <Card.Title>{post.title}</Card.Title>
                   <Card.Text className="text-truncate">{post.text}</Card.Text>
                   <h6>Tags:</h6>
-                  <Card.Text className="text-muted small">{post.tags?.join(", ")}</Card.Text>
+                  <Card.Text className="text-muted small">
+                    {post.tags?.join(", ")}
+                  </Card.Text>
                   <div className="d-flex align-items-center mt-3">
                     <img
                       src={post.creator.profilePhoto || "/placeholder.svg"}
@@ -186,32 +119,14 @@ export default function PostsPage() {
                 </Card.Body>
                 <Card.Footer className="bg-white">
                   <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleLike(post.id)}
-                        className="me-2 d-inline-flex align-items-center"
-                      >
-                        <i className="bi bi-heart-fill me-1"></i> Like
-                      </Button>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => handleEdit(post)}
-                        className="me-2 d-inline-flex align-items-center"
-                      >
-                        <i className="bi bi-pencil-fill me-1"></i> Edit
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(post.id)}
-                        className="d-inline-flex align-items-center"
-                      >
-                        <i className="bi bi-trash-fill me-1"></i> Delete
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleLike(post.id)}
+                      className="d-inline-flex align-items-center"
+                    >
+                      <i className="bi bi-heart-fill me-1"></i> Like
+                    </Button>
                     <Badge bg="light" text="dark" pill>
                       {post.likes} likes
                     </Badge>
@@ -222,59 +137,6 @@ export default function PostsPage() {
           ))}
         </Row>
       )}
-
-      {/* Modal chỉnh sửa */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Chỉnh sửa bài viết</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Tiêu đề</Form.Label>
-              <Form.Control
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Nội dung</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={4}
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-              />
-            </Form.Group>
-
-            <Form.Label>Tags</Form.Label>
-              <Form.Control 
-                type="text" 
-                placeholder="Separate tags with commas (e.g., news,tech,social)" 
-                value={editTags} 
-                onChange={(e) => setEditTags(e.target.value)}
-              />
-            <Form.Group className="mb-3">
-              <Form.Label>Ảnh / Video (nếu muốn thay đổi)</Form.Label>
-              <Form.Control
-                type="file"
-                accept="image/*,video/*"
-                onChange={(e) => setEditFile(e.target.files[0])}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-            Hủy
-          </Button>
-          <Button variant="primary" onClick={submitEditForm}>
-            Lưu thay đổi
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Container>
   )
 }

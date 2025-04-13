@@ -1,0 +1,21 @@
+/* Add this CSS file to your project and import it in UserProfile.jsx */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
+
+.bg-gradient-primary {
+  background: linear-gradient(to right, #8e2de2, #4a00e0);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Add responsive styles */
+@media (max-width: 768px) {
+  .position-absolute {
+    position: relative !important;
+    top: -75px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-bottom: -50px;
+  }
+}
